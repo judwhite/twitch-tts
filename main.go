@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -15,8 +14,6 @@ func init() {
 }
 
 func main() {
-	fmt.Println("go-cah")
-
 	//args := os.Args[1:] // for live play
 	args := []string{"--nick=go_cah", "--channel=#judwhite"} // NOTE: for testing
 	err := startBot(args)
