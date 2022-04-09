@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -56,8 +57,28 @@ func (b *bot) processPRIVMSG(msg ircPRIVMSG) error {
 		fmt.Printf("!! channel = %s\n", msg.Channel)
 		return nil
 	}
-	text := fmt.Sprintf("%s says %s", msg.Nick, msg.Message)
-	mp3bytes, err := textToMP3(text)
+
+	if strings.HasPrefix(msg.Message, "!") {
+		return b.processCommand(msg)
+	}
+
+	// extract language
+	lang := "en"
+	text := strings.TrimSpace(msg.Message)
+
+	if len(msg.Message) > 3 {
+		if msg.Message[2] == ':' {
+			lang = msg.Message[:2]
+			text = strings.TrimSpace(msg.Message[2:])
+		}
+	}
+
+	text = fmt.Sprintf("%s says %s", msg.Nick, text)
+	fmt.Printf("tts: %s\n", text)
+
+	text = strings.ReplaceAll(text, "judwhite", "judd white")
+
+	mp3bytes, err := textToMP3(lang, text)
 	if err != nil {
 		return err
 	}
@@ -71,6 +92,43 @@ func (b *bot) processPRIVMSG(msg ircPRIVMSG) error {
 		}
 		_ = cmd.Wait()
 	}()
+
+	return nil
+}
+
+func (b *bot) processCommand(msg ircPRIVMSG) error {
+	var cmd, text string
+
+	idx := strings.Index(msg.Message, " ")
+	if idx == -1 {
+		cmd = msg.Message
+	} else {
+		cmd = strings.TrimSpace(msg.Message[:idx])
+		text = strings.TrimSpace(msg.Message[idx:])
+	}
+
+	switch cmd {
+	case "!github":
+		return b.irc.Say(msg.Channel, "https://github.com/judwhite")
+	case "!lichess":
+		return b.irc.Say(msg.Channel, "https://lichess.org/@/bantercode")
+	case "!chess":
+		return b.irc.Say(msg.Channel, "https://chess.com/play/judwhite")
+	case "!f2c":
+		f, err := strconv.ParseFloat(text, 64)
+		if err != nil {
+			return err
+		}
+		c := (f - 32) * 5 / 9
+		return b.irc.Say(msg.Channel, fmt.Sprintf("%d°F = %d°C", int(f), int(c)))
+	case "!c2f":
+		c, err := strconv.ParseFloat(text, 64)
+		if err != nil {
+			return err
+		}
+		f := (c * 9 / 5) + 32
+		return b.irc.Say(msg.Channel, fmt.Sprintf("%d°C = %d°F", int(c), int(f)))
+	}
 
 	return nil
 }
