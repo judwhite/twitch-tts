@@ -2,7 +2,15 @@
 
 Twitch Text-to-Speech bot
 
-# Install instruction for Ubuntu 20+
+# Compile instructions
+
+1. Download the latest version of Go https://go.dev/dl/
+2. Follow the installation instructions for your OS https://go.dev/doc/install.
+3. Clone this repository `git clone https://github.com/judwhite/twitch-tts`
+4. Go to the new directory `cd twitch-tts`
+5. Compile the binary using `go build`
+
+# Installation
 
 ```
 export TWITCH_OAUTH_TOKEN=<your_token>
