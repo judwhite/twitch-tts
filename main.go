@@ -15,6 +15,7 @@ func init() {
 
 func main() {
 	// ./twitch-tts --nick=<botname> --channel=<#yourchannel>
+
 	args := os.Args[1:] // for live play
 	err := startBot(args)
 	if err != nil {

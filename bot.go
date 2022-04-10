@@ -73,6 +73,7 @@ func (b *bot) ttsLoop() {
 
 		text = fmt.Sprintf("%s %s %s", nick, says, text)
 
+		text = strings.ToLower(text)
 		if err := b.doTTS(lang, text); err != nil {
 			log.Printf("ERR: %v\n", err)
 			continue
@@ -116,12 +117,17 @@ func (b *bot) processPRIVMSG(msg ircPRIVMSG) error {
 
 func (b *bot) doTTS(lang, text string) error {
 	// cleanup
+	text = strings.ReplaceAll(text, "nebraska sky", "naughty librarian")
 	text = strings.ReplaceAll(text, "judwhite", "judd white")
 	text = strings.ReplaceAll(text, "soup steward", "soupy")
 	text = strings.ReplaceAll(text, "degen", "di-jenn")
 	text = strings.ReplaceAll(text, "elo", "e-low")
 	text = strings.ReplaceAll(text, "@", " @ ")
 	text = strings.ReplaceAll(text, "  ", " ")
+	text = strings.ReplaceAll(text, "sun110106", "sun sempai")
+	text = strings.ReplaceAll(text, "!", "")
+	text = strings.ReplaceAll(text, "hecatonicosahedroid", "bighicky")
+	text = strings.ReplaceAll(text, "pudge2008", "pudgey")
 
 	var (
 		mp3 []byte
