@@ -12,17 +12,36 @@ Twitch Text-to-Speech bot
 
 # Installation
 
+## Install gTTS
+
+Run `sudo apt install python3-gtts` to use your distribution's version of gTTS.
+
+For a more recent version of gTTS, run:
+
 ```
-export TWITCH_OAUTH_TOKEN=<your_token>
-
-sudo apt install pip
+sudo apt install python3-pip
 sudo pip install gTTS
+```
+
+After installing you may need to create a new terminal session for `gtts-cli` to show up in the `PATH`.
+
+## Install VLC command-line utilities
+
+```
 sudo apt install vlc-bin
+```
 
-git clone https://github.com/judwhite/twitch-tts
-cd twitch-tts
-go build
+Test that the `nvlc` binary is found.
 
+## Create a Twitch Chat OAuth Token
+
+1. The easy way: https://www.twitchapps.com/tmi/
+2. `export TWITCH_IRC_OAUTH="<your_token>"` (add this to ~/.profile and run `source ~/.profile`)
+
+
+# Running
+
+```
 ./twitch-tts --nick=<bot_name> --channel=<#your_channel>
 ```
 
