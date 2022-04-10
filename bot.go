@@ -118,6 +118,8 @@ func (b *bot) doTTS(lang, text string) error {
 	// cleanup
 	text = strings.ReplaceAll(text, "judwhite", "judd white")
 	text = strings.ReplaceAll(text, "soup steward", "soupy")
+	text = strings.ReplaceAll(text, "degen", "di-jenn")
+	text = strings.ReplaceAll(text, "elo", "e-low")
 	text = strings.ReplaceAll(text, "@", " @ ")
 	text = strings.ReplaceAll(text, "  ", " ")
 
