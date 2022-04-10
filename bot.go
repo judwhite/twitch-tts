@@ -1,8 +1,9 @@
 package main
 
 import (
-	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os/exec"
 	"strconv"
@@ -15,6 +16,8 @@ type bot struct {
 	publicMessages chan ircPRIVMSG
 	joins          chan ircJOIN
 	parts          chan ircPART
+	tts            chan ircPRIVMSG
+	mp3Writer      io.WriteCloser
 	exit           chan struct{}
 }
 
@@ -22,6 +25,7 @@ func (b *bot) Start() error {
 	b.publicMessages = make(chan ircPRIVMSG)
 	b.joins = make(chan ircJOIN)
 	b.parts = make(chan ircPART)
+	b.tts = make(chan ircPRIVMSG)
 
 	b.exit = make(chan struct{})
 
@@ -29,9 +33,51 @@ func (b *bot) Start() error {
 		return err
 	}
 
+	if err := b.startFFPlay(); err != nil {
+		return err
+	}
+
+	go b.ttsLoop()
 	go b.readLoop()
 
 	return nil
+}
+
+func (b *bot) ttsLoop() {
+	for msg := range b.tts {
+		fmt.Printf("tts received: %s '%s'\n", msg.Nick, msg.Message)
+		nick := strings.ReplaceAll(msg.Nick, "_", " ")
+		text := msg.Message
+
+		lang := "en"
+		if len(text) > 3 {
+			if text[2] == ':' {
+				lang = text[:2]
+				text = strings.TrimSpace(text[2:])
+			}
+		}
+
+		says := "says"
+		switch lang {
+		case "es":
+			says = "dice"
+		case "fr":
+			says = "dit"
+		case "it":
+			says = "dice"
+		case "de":
+			says = "sagt"
+		case "tr":
+			says = "viski iç"
+		}
+
+		text = fmt.Sprintf("%s %s %s", nick, says, text)
+
+		if err := b.doTTS(lang, text); err != nil {
+			log.Printf("ERR: %v\n", err)
+			continue
+		}
+	}
 }
 
 func (b *bot) readLoop() {
@@ -63,36 +109,63 @@ func (b *bot) processPRIVMSG(msg ircPRIVMSG) error {
 	}
 
 	// extract language
-	lang := "en"
-	text := strings.TrimSpace(msg.Message)
+	b.tts <- msg
 
-	if len(msg.Message) > 3 {
-		if msg.Message[2] == ':' {
-			lang = msg.Message[:2]
-			text = strings.TrimSpace(msg.Message[2:])
+	return nil
+}
+
+func (b *bot) doTTS(lang, text string) error {
+	// cleanup
+	text = strings.ReplaceAll(text, "judwhite", "judd white")
+	text = strings.ReplaceAll(text, "soup steward", "soupy")
+	text = strings.ReplaceAll(text, "@", " @ ")
+	text = strings.ReplaceAll(text, "  ", " ")
+
+	var (
+		mp3 []byte
+		err error
+		ok  bool
+	)
+
+	for tries := 0; tries < 3 && !ok; tries++ {
+		mp3, err, ok = textToMP3(lang, text)
+		if tries >= 2 {
+			if err != nil {
+				return err
+			} else if !ok {
+				return errors.New("3 failed attempts at textToMP#")
+			}
 		}
 	}
 
-	text = fmt.Sprintf("%s says %s", msg.Nick, text)
-	fmt.Printf("tts: %s\n", text)
+	return b.playMP3(mp3)
+}
 
-	text = strings.ReplaceAll(text, "judwhite", "judd white")
-
-	mp3bytes, err := textToMP3(lang, text)
+func (b *bot) startFFPlay() error {
+	cmd := exec.Command("ffplay", "-nodisp", "-af", "atempo=1.1", "-")
+	wc, err := cmd.StdinPipe()
 	if err != nil {
 		return err
 	}
+	b.mp3Writer = wc
 
 	go func() {
-		cmd := exec.Command("nvlc", "--no-interact", "--play-and-exit", "-")
-		cmd.Stdin = bytes.NewReader(mp3bytes)
-		err := cmd.Start()
-		if err != nil {
-			log.Println(err)
+		if err := cmd.Start(); err != nil {
+			log.Fatal(err)
 		}
-		_ = cmd.Wait()
+		if err := cmd.Wait(); err != nil {
+			log.Fatal(err)
+		}
 	}()
 
+	return nil
+}
+
+func (b *bot) playMP3(mp3 []byte) error {
+	_, err := b.mp3Writer.Write(mp3)
+	if err != nil {
+		return fmt.Errorf("writeMP3: %w", err)
+	}
 	return nil
 }
 

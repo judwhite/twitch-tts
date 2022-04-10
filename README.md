@@ -25,13 +25,13 @@ sudo pip install gTTS
 
 After installing you may need to create a new terminal session for `gtts-cli` to show up in the `PATH`.
 
-## Install VLC command-line utilities
+## Install ffmpeg
 
 ```
-sudo apt install vlc-bin
+sudo apt install ffmpeg
 ```
 
-Test that the `nvlc` binary is found.
+Test that the `ffplay` binary is found.
 
 ## Create a Twitch Chat OAuth Token
 
