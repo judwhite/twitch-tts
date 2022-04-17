@@ -71,6 +71,22 @@ func (b *bot) ttsLoop() {
 			says = "viski iç"
 		}
 
+		if strings.Contains(text, "http") {
+			text = "posted a link"
+			says = ""
+		}
+
+		// filter out bot spam
+		spam := false
+		if strings.Contains(text, "best followers") {
+			spam = true
+		}
+
+		if spam {
+			says = ""
+			text = "wants to be banned"
+		}
+
 		text = fmt.Sprintf("%s %s %s", nick, says, text)
 
 		text = strings.ToLower(text)
@@ -117,6 +133,7 @@ func (b *bot) processPRIVMSG(msg ircPRIVMSG) error {
 
 func (b *bot) doTTS(lang, text string) error {
 	// cleanup
+	text = strings.ToLower(text)
 	text = strings.ReplaceAll(text, "nebraska sky", "naughty librarian")
 	text = strings.ReplaceAll(text, "judwhite", "judd white")
 	text = strings.ReplaceAll(text, "soup steward", "soupy")
@@ -128,6 +145,10 @@ func (b *bot) doTTS(lang, text string) error {
 	text = strings.ReplaceAll(text, "!", "")
 	text = strings.ReplaceAll(text, "hecatonicosahedroid", "bighicky")
 	text = strings.ReplaceAll(text, "pudge2008", "pudgey")
+	text = strings.ReplaceAll(text, "jackoiz123", "jack-oye")
+	text = strings.ReplaceAll(text, "rafaelplayschess", "twenty one hundred in puzzles")
+	text = strings.ReplaceAll(text, "valintinian", "drunk cuck")
+	text = strings.ReplaceAll(text, "drellade", "doctor dre")
 
 	var (
 		mp3 []byte
@@ -141,7 +162,7 @@ func (b *bot) doTTS(lang, text string) error {
 			if err != nil {
 				return err
 			} else if !ok {
-				return errors.New("3 failed attempts at textToMP#")
+				return errors.New("3 failed attempts at textToMP3")
 			}
 		}
 	}
